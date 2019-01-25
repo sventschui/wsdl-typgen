@@ -14,7 +14,8 @@
     "build": "npm-run-all build:clean build:templates build:lib",
     "build:clean": "rimraf lib",
     "build:templates": "handlebars src/templates/flow -c handlebars/runtime -e hbs -f src/templates/flow.js",
-    "build:lib": "babel src -d lib --ignore src/dev.js"
+    "build:lib": "babel src -d lib --ignore src/dev.js",
+    "prepublishOnly": "yarn build"
   },
   "dependencies": {
     "camelcase": "^5.0.0",
