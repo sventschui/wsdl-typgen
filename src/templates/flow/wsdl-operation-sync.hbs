@@ -1,6 +1,8 @@
 {{! TODO: Should type the error based on the soap faults... }}
 {{operationName}}: (
     input: {{inputType}} | {| _xml: string |}, 
+    options?: Object,
+    extraHeaders?: Object,
     (
         err?: any, 
         result: {{outputType}}, 

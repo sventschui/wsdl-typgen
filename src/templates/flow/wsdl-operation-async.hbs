@@ -1,5 +1,7 @@
 {{operationName}}Async: (
-    input: {{inputType}} | {| _xml: string |}
+    input: {{inputType}} | {| _xml: string |},
+    options?: Object,
+    extraHeaders?: Object,
 ) => Promise<[
     {{outputType}}, 
     string, 
