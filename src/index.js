@@ -297,6 +297,7 @@ commander
                 importEl.$$root.$$imports[importEl.$.namespace.value] = `i${Object.keys(importEl.$$root.$$imports).length}`;
               } else {
                 console.warn(`Import for namespace ${importEl.$.namespace.value} already registered`);
+                return '';
               }
 
               processFile(path.resolve(file, '..', importEl.$.schemaLocation.value), 'schema');
