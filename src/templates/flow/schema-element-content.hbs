@@ -4,7 +4,7 @@
 {{$.fixed.value}}
 {{else}}
     {{#if $.type}}
-    {{typeName $.type.value}}
+    {{typeName $.type.value this}}
     {{/if}}
     {{#eachOfType $children 'http://www.w3.org/2001/XMLSchema' 'simpleType'}}
     TODO: simpleType

@@ -1,6 +1,7 @@
 {{#eachOfType $children 'http://www.w3.org/2001/XMLSchema' 'import'}}
-{{registerImport $.schemaLocation.value}}{{!
-}}import * as {{nsAlias $.namespace.value}} from '{{importPath $.schemaLocation.value}}.js';
+{{#registerImport this}}
+import * as {{importName}} from '{{importPath}}.js';
+{{/registerImport}}
 {{/eachOfType}}
 
 {{#eachOfType $children 'http://www.w3.org/2001/XMLSchema' 'element'}}

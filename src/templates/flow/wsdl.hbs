@@ -64,7 +64,7 @@ export type {{$.name.value}} = {|
     {{! TODO: Support RPC-style wsdl's that have type="" instead of element="" in the input/output definitions}}
     {{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'part'}}
         {{#if $.element}}
-    {{localPartNoValidation $.element.value}}: {{typeName $.element.value}}_element,
+    {{localPartNoValidation $.element.value}}: {{typeName $.element.value this}}_element,
         {{/if}}
     {{/eachOfType}}
 |};
