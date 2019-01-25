@@ -156,7 +156,8 @@ commander
               }
 
               if (definitionsElement.$children.length !== 1) {
-                throw new Error(`Expected exactly one child in wsdl:definitions but got ${definitionsElement.$children.length}`);
+                console.log(file, JSON.stringify(definitionsElement.$children));
+                throw new Error(`Expected exactly one child in wsdl:types but got ${definitionsElement.$children.length}`);
               }
 
               if (definitionsElement.$children[0].$ns.local !== 'schema'
