@@ -1,2 +1,11 @@
 {{! TODO: Should type the error based on the soap faults... }}
-{{operation.$.name.value}}: ({{#if input}}input: {{localPart input.$.message.value}}_element | {| _xml: string |}{{/if}}, (err?: any, result: {{#if output}}{{localPart output.$.message.value}}_element{{else}}null{{/if}}, rawResponse: string, soapHeader: Object, rawRequest: string) => void) => void,
+{{operationName}}: (
+    input: {{inputType}} | {| _xml: string |}, 
+    (
+        err?: any, 
+        result: {{outputType}}, 
+        rawResponse: string, 
+        soapHeader: Object, 
+        rawRequest: string
+    ) => void
+) => void,

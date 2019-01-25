@@ -18,7 +18,7 @@ export type Client = {|
     {{$.name.value}}: {{$.name.value}},
     {{/eachOfType}}
 
-{{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'portType'}}
+{{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'binding'}}
     {{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'operation'}}
     {{>wsdlDocumentation}}
         {{#withInputOutputAndFaults this}}
@@ -41,14 +41,12 @@ export type Client = {|
 {{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'service'}}
 export type {{$.name.value}} = {|
     {{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'port'}}
-        {{#withPortType this}}
-    {{../$.name.value}}: {{portType.$.name.value}},
-        {{/withPortType}}
+    {{$.name.value}}: {{localPart $.binding.value}},
     {{/eachOfType}}
 |};
 {{/eachOfType}}
 
-{{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'portType'}}
+{{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'binding'}}
 export type {{$.name.value}} = {|
     {{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'operation'}}
         {{>wsdlDocumentation}}
@@ -60,12 +58,9 @@ export type {{$.name.value}} = {|
 {{/eachOfType}}
 
 {{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'message'}}
-export type {{$.name.value}} = {|
-    {{! TODO: Support RPC-style wsdl's that have type="" instead of element="" in the input/output definitions}}
-    {{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'part'}}
-        {{#if $.element}}
-    {{localPartNoValidation $.element.value}}: {{typeName $.element.value this}}_element,
-        {{/if}}
-    {{/eachOfType}}
-|};
+{{#eachOfType $children 'http://schemas.xmlsoap.org/wsdl/' 'part'}}
+export type {{../$.name.value}}__{{$.name.value}} =
+        {{typeName $.element.value this}}_element
+;
+{{/eachOfType}}
 {{/eachOfType}}

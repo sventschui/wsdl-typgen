@@ -104,266 +104,328 @@ commander
         await fs.readFile(file, { charset: 'utf8' }),
         // eslint-disable-next-line no-loop-func
         async (err, rn) => {
-          rn.$children.forEach(child => addRootAndParent(child, rn, rn));
-          rn.$$imports = {};
+          try {
+            rn.$children.forEach(child => addRootAndParent(child, rn, rn));
+            rn.$$imports = {};
 
-          let templateFn;
-          let targetNamespaceAlias;
+            let templateFn;
+            let targetNamespaceAlias;
 
-          if (type === 'wsdl') {
-            if (rn.$ns.local !== 'definitions'
-              || rn.$ns.uri !== 'http://schemas.xmlsoap.org/wsdl/') {
-              throw new Error(`Expected schema as root node but got ${rn.$ns.uri}:${rn.$ns.local} in ${file}`);
-            }
-
-            templateFn = wsdlTpl;
-
-            const targetNsDefinition = Object.keys(rn.$).find(nsDefinition => nsDefinition.startsWith('xmlns:') && rn.$[nsDefinition].value === rn.$.targetNamespace.value);
-
-            if (!targetNsDefinition) {
-              throw new Error(`Could not find xmlns definition for nsUri ${rn.$.targetNamespace.value}`);
-            }
-  
-            targetNamespaceAlias = targetNsDefinition.split(':')[1];
-          } else if (type === 'schema') {
-            if (rn.$ns.local !== 'schema'
-              || rn.$ns.uri !== 'http://www.w3.org/2001/XMLSchema') {
-              throw new Error(`Expected schema as root node but got ${rn.$ns.uri}:${rn.$ns.local} in ${file}`);
-            }
-
-            templateFn = schemaTpl;
-          } else {
-            throw new Error(`Unknown file type ${type}`);
-          }
-
-          function localPartNoValidation(qname) {
-            const [nsAlias, local] = qname.split(':'); // eslint-disable-line no-unused-vars
-
-            return local;
-          }
-
-          function localPart(qname) {
-            const [nsAlias, local] = qname.split(':');
-
-            if (nsAlias !== targetNamespaceAlias) {
-              throw new Error(`Tried to use local part of QName that is not inside targetNs (${targetNamespaceAlias}): ${qname}`);
-            }
-
-            return local;
-          }
-
-          function resolveNs(nsAlias, el) {
-            if (el.$ && el.$[`xmlns:${nsAlias}`]) {
-              return el.$[`xmlns:${nsAlias}`].value;
-            }
-
-            if (el.$$parent) {
-              return resolveNs(nsAlias, el.$$parent);
-            }
-
-            throw new Error(`Could not resolve nsAlias ${nsAlias}`);
-          }
-
-          const aliasForNamespace = (rootNode) => Object.keys(rootNode.$)
-            .filter(key => key.startsWith('xmlns:'))
-            .reduce((accum, key) => {
-              const [xmlns, alias] = key.split(':'); // eslint-disable-line no-unused-vars
-              const namespace = rootNode.$[key].value;
-              accum[namespace] = alias; // eslint-disable-line no-param-reassign
-              return accum;
-            }, {});
-
-          const helpers = {
-            localPart,
-            localPartNoValidation,
-            inlineSchema(definitionsElement) {
-              if (!definitionsElement.$children) {
-                throw new Error('Expected one child in wsdl:definitions but got none');
+            if (type === 'wsdl') {
+              if (rn.$ns.local !== 'definitions'
+                || rn.$ns.uri !== 'http://schemas.xmlsoap.org/wsdl/') {
+                throw new Error(`Expected schema as root node but got ${rn.$ns.uri}:${rn.$ns.local} in ${file}`);
               }
 
-              return definitionsElement.$children.reduce((accum, child) => {
-                if (child.$ns.local !== 'schema'
-                  || child.$ns.uri !== 'http://www.w3.org/2001/XMLSchema') {
-                  throw new Error(`Expected an xs:schema child in wsdl:definitions but got ${definitionsElement.$children[0].$ns.uri}:${definitionsElement.$children[0].$ns.local} in ${file}`);
+              templateFn = wsdlTpl;
+
+              const targetNsDefinition = Object.keys(rn.$).find(nsDefinition => nsDefinition.startsWith('xmlns:') && rn.$[nsDefinition].value === rn.$.targetNamespace.value);
+
+              if (!targetNsDefinition) {
+                throw new Error(`Could not find xmlns definition for nsUri ${rn.$.targetNamespace.value}`);
+              }
+    
+              targetNamespaceAlias = targetNsDefinition.split(':')[1];
+            } else if (type === 'schema') {
+              if (rn.$ns.local !== 'schema'
+                || rn.$ns.uri !== 'http://www.w3.org/2001/XMLSchema') {
+                throw new Error(`Expected schema as root node but got ${rn.$ns.uri}:${rn.$ns.local} in ${file}`);
+              }
+
+              templateFn = schemaTpl;
+            } else {
+              throw new Error(`Unknown file type ${type}`);
+            }
+
+            function localPartNoValidation(qname) {
+              const [nsAlias, local] = qname.split(':'); // eslint-disable-line no-unused-vars
+
+              return local;
+            }
+
+            function localPart(qname) {
+              const [nsAlias, local] = qname.split(':');
+
+              if (nsAlias !== targetNamespaceAlias) {
+                throw new Error(`Tried to use local part of QName that is not inside targetNs (${targetNamespaceAlias}): ${qname}`);
+              }
+
+              return local;
+            }
+
+            function resolveNs(nsAlias, el) {
+              if (el.$ && el.$[`xmlns:${nsAlias}`]) {
+                return el.$[`xmlns:${nsAlias}`].value;
+              }
+
+              if (el.$$parent) {
+                return resolveNs(nsAlias, el.$$parent);
+              }
+
+              throw new Error(`Could not resolve nsAlias ${nsAlias}`);
+            }
+
+            const aliasForNamespace = (rootNode) => Object.keys(rootNode.$)
+              .filter(key => key.startsWith('xmlns:'))
+              .reduce((accum, key) => {
+                const [xmlns, alias] = key.split(':'); // eslint-disable-line no-unused-vars
+                const namespace = rootNode.$[key].value;
+                accum[namespace] = alias; // eslint-disable-line no-param-reassign
+                return accum;
+              }, {});
+
+            const helpers = {
+              localPart,
+              localPartNoValidation,
+              inlineSchema(definitionsElement) {
+                if (!definitionsElement.$children) {
+                  throw new Error('Expected one child in wsdl:definitions but got none');
                 }
 
-                if (child.$.targetNamespace.value === child.$$root.$.targetNamespace) {
-                  
+                return definitionsElement.$children.reduce((accum, child) => {
+                  if (child.$ns.local !== 'schema'
+                    || child.$ns.uri !== 'http://www.w3.org/2001/XMLSchema') {
+                    throw new Error(`Expected an xs:schema child in wsdl:definitions but got ${definitionsElement.$children[0].$ns.uri}:${definitionsElement.$children[0].$ns.local} in ${file}`);
+                  }
+
+                  if (child.$.targetNamespace.value === child.$$root.$.targetNamespace) {
+                    
+                  }
+
+                  return accum + '\n\n' + inlineSchemaTpl(child, { helpers });
+                }, '')
+              },
+              ifAttributeOptional(attribute, options) {
+                if (attribute && attribute.$ && attribute.$.use && attribute.$.use.value === 'optional') {
+                  return options.fn(this);
                 }
 
-                return accum + '\n\n' + inlineSchemaTpl(child, { helpers });
-              }, '')
-            },
-            ifAttributeOptional(attribute, options) {
-              if (attribute && attribute.$ && attribute.$.use && attribute.$.use.value === 'optional') {
-                return options.fn(this);
-              }
-
-              return '';
-            },
-            withInputOutputAndFaults(operation, options) {
-              const input = operation.$children.find(byQName('http://schemas.xmlsoap.org/wsdl/', 'input'));
-              const output = operation.$children.find(byQName('http://schemas.xmlsoap.org/wsdl/', 'output'));
-              const faults = operation.$children.filter(byQName('http://schemas.xmlsoap.org/wsdl/', 'fault'));
-
-              return options.fn({
-                operation, input, output, faults,
-              });
-            },
-            withPortType(port, options) {
-              const [bindingNameNsAlias, bindingNameLocal] = port.$.binding.value.split(':');
-
-              if (bindingNameNsAlias !== targetNamespaceAlias) {
-                throw new Error('referring to bindings of imported WSDLs is not supported yet!');
-              }
-
-              const binding = port.$$root.$children.find(child => child.$ns.local === 'binding'
-              && child.$ns.uri === 'http://schemas.xmlsoap.org/wsdl/'
-              && child.$.name.value === bindingNameLocal);
-
-              const [portTypeNameNsAlias, portTypeNameLocal] = binding.$.type.value.split(':');
-
-              if (portTypeNameNsAlias !== targetNamespaceAlias) {
-                throw new Error('referring to port types of imported WSDLs is not supported yet!');
-              }
-
-              const portType = port.$$root.$children.find(child => child.$ns.local === 'portType'
-              && child.$ns.uri === 'http://schemas.xmlsoap.org/wsdl/'
-              && child.$.name.value === portTypeNameLocal);
-
-              return options.fn({ portType });
-            },
-            ifArray(attributes, dflt, options) {
-              const maxOccurs = attributes && attributes.maxOccurs
-                ? attributes.maxOccurs.value
-                : dflt;
-
-              if (maxOccurs === 'unbounded' || parseInt(maxOccurs, 10) > 1) {
-                return options.fn(this);
-              }
-
-              return '';
-            },
-            hasChildOfType(children, nsUri, local, options) {
-              if (children && children.some(byQName(nsUri, local))) {
-                return options.fn(this);
-              }
-
-              return '';
-            },
-            eachOfType(children, nsUri, local, options) {
-              if (!children) {
                 return '';
-              }
-
-              if (!Array.isArray(children)) {
-                throw new Error('children not an array...');
-              }
-
-              let returnValue = '';
-
-              const filtered = children.filter(byQName(nsUri, local));
-
-              filtered.forEach(((child, index) => {
-                returnValue += options.fn(child, { data: { last: index === filtered.length - 1 } });
-              }));
-
-              return returnValue;
-            },
-            asComment(text) {
-              return text && `// ${text.split('\n').join('\n// ')}`;
-            },
-            ifOptional(attributes, dflt, options) {
-              if (attributes.nillable && attributes.nillable.value === true) {
-                return true;
-              }
-
-              const minOccurs = attributes && attributes.minOccurs
-                ? attributes.minOccurs.value
-                : dflt;
-
-              if (minOccurs === '0') {
-                return options.fn(this);
-              }
-
-              return '';
-            },
-            registerImport(importEl, options) {
-              if (arguments.length !== 2) {
-                throw new Error('Expected exactly two arguments');
-              }
-
-              if (!importEl.$$root.$$imports[importEl.$.namespace.value]) {
-                importEl.$$root.$$imports[importEl.$.namespace.value] = `i${Object.keys(importEl.$$root.$$imports).length}`;
-              } else {
-                console.warn(`Import for namespace ${importEl.$.namespace.value} already registered`);
-                return '';
-              }
-
-              processFile(path.resolve(file, '..', importEl.$.schemaLocation.value), 'schema');
-
-              const importPath = importEl.$.schemaLocation.value.startsWith('/')
-                || importEl.$.schemaLocation.value.startsWith('./')
-                || importEl.$.schemaLocation.value.startsWith('../')
-                ? importEl.$.schemaLocation.value
-                : `./${importEl.$.schemaLocation.value}`;
-
-              return options.fn({ 
-                importName: importEl.$$root.$$imports[importEl.$.namespace.value],
-                importPath,
-              });
-            },
-            hasAttributes(children, options) {
-              if (children
-              && children.some(child => child.$ns.uri === 'http://www.w3.org/2001/XMLSchema'
-                && ['attribute', 'anyAttribute', 'attributeGroup'].indexOf(child.$ns.local) !== -1)) {
-                return options.fn(this);
-              }
-
-              return '';
-            },
-            typeName(typeName, el, options) {
-              const [nsAlias, local] = typeName.split(':');
-
-              const nsUri = resolveNs(nsAlias, el);
-
-              if (nsUri === 'http://www.w3.org/2001/XMLSchema') {
-                switch (local) {
-                  case 'string':
-                  case 'base64Binary':
-                    return 'string';
-                  case 'long':
-                  case 'int':
-                  case 'decimal':
-                    return 'number';
-                  case 'boolean':
-                    return 'boolean';
-                  case 'date':
-                  case 'dateTime':
-                  case 'time':
-                    return 'Date';
-                  default:
-                    throw new Error(`Unknown built-in ${local}`);
+              },
+              is(arg1, arg2, options) {
+                if (arg1 === arg2) {
+                  return options.fn(this);
                 }
-              }
 
-              // check for imported stuff
-              // this must go before targetNs as this might overrule it
-              if (el.$$root.$$imports[nsUri]) {
-                return `${el.$$root.$$imports[nsUri]}.${local}`;
-              }
+                return '';
+              },
+              withInputOutputAndFaults(bindingOperation, options) {
+                const binding = bindingOperation.$$parent;
+                const portType = bindingOperation.$$root.$children
+                  .filter(byQName('http://schemas.xmlsoap.org/wsdl/', 'portType'))
+                  .find(child => child.$.name.value === localPart(binding.$.type.value));
+                const operation = portType.$children
+                  .filter(byQName('http://schemas.xmlsoap.org/wsdl/', 'operation'))
+                  .find(child => child.$.name.value === bindingOperation.$.name.value);
+
+                const operationInput = operation.$children.find(byQName('http://schemas.xmlsoap.org/wsdl/', 'input'));
+                const operationOutput = operation.$children.find(byQName('http://schemas.xmlsoap.org/wsdl/', 'output'));
+                const operationFaults = operation.$children.filter(byQName('http://schemas.xmlsoap.org/wsdl/', 'fault'));
+                const inputMessage = bindingOperation.$$root.$children
+                  .filter(byQName('http://schemas.xmlsoap.org/wsdl/', 'message'))
+                  .find(message => message.$.name.value === localPart(operationInput.$.message.value));
+                const outputMessage = bindingOperation.$$root.$children
+                  .filter(byQName('http://schemas.xmlsoap.org/wsdl/', 'message'))
+                  .find(message => message.$.name.value === localPart(operationOutput.$.message.value));
+                const bindingInput = bindingOperation.$children.find(byQName('http://schemas.xmlsoap.org/wsdl/', 'input'));
+                const bindingOutput = bindingOperation.$children.find(byQName('http://schemas.xmlsoap.org/wsdl/', 'output'));
+                const soapBodyInput = bindingInput.$children.find(byQName('http://schemas.xmlsoap.org/wsdl/soap/', 'body'));
+                const soapBodyOutput = bindingOutput.$children.find(byQName('http://schemas.xmlsoap.org/wsdl/soap/', 'body'));
+
+                if (soapBodyInput.$.use.value !== 'literal') {
+                  throw new Error('Only soap:body#use=\'literal\' is supported');
+                }
+                if (soapBodyOutput.$.use.value !== 'literal') {
+                  throw new Error('Only soap:body#use=\'literal\' is supported');
+                }
+
+                const inputParts = soapBodyInput.$.parts
+                  ? soapBodyInput.$.parts.value.split(' ')
+                    .map(partName => inputMessage.$children
+                      .filter(byQName('http://schemas.xmlsoap.org/wsdl/', 'part'))
+                      .find(part => part.$.name.value === partName))
+                  : inputMessage.$children
+                    .filter(byQName('http://schemas.xmlsoap.org/wsdl/', 'part'));
+                const outputParts = soapBodyOutput.$.parts 
+                  ? soapBodyOutput.$.parts.value.split(' ')
+                    .map(partName => outputMessage.$children
+                      .filter(byQName('http://schemas.xmlsoap.org/wsdl/', 'part'))
+                      .find(part => part.$.name.value === partName))
+                  : outputMessage.$children
+                    .filter(byQName('http://schemas.xmlsoap.org/wsdl/', 'part'));
 
 
-              // check for targetNameSpace
-              if (el.$$root.$.targetNamespace.value === nsUri) {
-                return local;
-              }
+                if (inputParts.length !== 1) {
+                  throw new Error('Only one input part is supported');
+                }
+                if (outputParts.length !== 1) {
+                  throw new Error('Only one output part is supported');
+                }
 
-              throw new Error(`Can't build typename for ${typeName} ${nsUri} in ${file}`);
-            },
-          };
+                return options.fn({
+                  operationName: bindingOperation.$.name.value,
+                  inputType: `${inputMessage.$.name.value}__${inputParts[0].$.name.value}`,
+                  outputType: `${outputMessage.$.name.value}__${outputParts[0].$.name.value}`,
+                });
+              },
+              withPortType(port, options) {
+                const [bindingNameNsAlias, bindingNameLocal] = port.$.binding.value.split(':');
 
-          await fs.writeFile(`${file}.js`, prettier.format(templateFn(rn, { helpers }), { ...(await prettier.resolveConfig(`${file}.js`)), parser: 'babel' }), { charset: 'utf8' });
+                if (bindingNameNsAlias !== targetNamespaceAlias) {
+                  throw new Error('referring to bindings of imported WSDLs is not supported yet!');
+                }
+
+                const binding = port.$$root.$children.find(child => child.$ns.local === 'binding'
+                && child.$ns.uri === 'http://schemas.xmlsoap.org/wsdl/'
+                && child.$.name.value === bindingNameLocal);
+
+                const [portTypeNameNsAlias, portTypeNameLocal] = binding.$.type.value.split(':');
+
+                if (portTypeNameNsAlias !== targetNamespaceAlias) {
+                  throw new Error('referring to port types of imported WSDLs is not supported yet!');
+                }
+
+                const portType = port.$$root.$children.find(child => child.$ns.local === 'portType'
+                && child.$ns.uri === 'http://schemas.xmlsoap.org/wsdl/'
+                && child.$.name.value === portTypeNameLocal);
+
+                return options.fn({ portType });
+              },
+              ifArray(attributes, dflt, options) {
+                const maxOccurs = attributes && attributes.maxOccurs
+                  ? attributes.maxOccurs.value
+                  : dflt;
+
+                if (maxOccurs === 'unbounded' || parseInt(maxOccurs, 10) > 1) {
+                  return options.fn(this);
+                }
+
+                return '';
+              },
+              hasChildOfType(children, nsUri, local, options) {
+                if (children && children.some(byQName(nsUri, local))) {
+                  return options.fn(this);
+                }
+
+                return '';
+              },
+              eachOfType(children, nsUri, local, options) {
+                if (!children) {
+                  return '';
+                }
+
+                if (!Array.isArray(children)) {
+                  throw new Error('children not an array...');
+                }
+
+                let returnValue = '';
+
+                const filtered = children.filter(byQName(nsUri, local));
+
+                filtered.forEach(((child, index) => {
+                  returnValue += options.fn(child, { data: { last: index === filtered.length - 1 } });
+                }));
+
+                return returnValue;
+              },
+              asComment(text) {
+                return text && `// ${text.split('\n').join('\n// ')}`;
+              },
+              ifOptional(attributes, dflt, options) {
+                if (attributes.nillable && attributes.nillable.value === true) {
+                  return true;
+                }
+
+                const minOccurs = attributes && attributes.minOccurs
+                  ? attributes.minOccurs.value
+                  : dflt;
+
+                if (minOccurs === '0') {
+                  return options.fn(this);
+                }
+
+                return '';
+              },
+              registerImport(importEl, options) {
+                if (arguments.length !== 2) {
+                  throw new Error('Expected exactly two arguments');
+                }
+
+                if (!importEl.$$root.$$imports[importEl.$.namespace.value]) {
+                  importEl.$$root.$$imports[importEl.$.namespace.value] = `i${Object.keys(importEl.$$root.$$imports).length}`;
+                } else {
+                  return '';
+                }
+
+                processFile(path.resolve(file, '..', importEl.$.schemaLocation.value), 'schema');
+
+                const importPath = importEl.$.schemaLocation.value.startsWith('/')
+                  || importEl.$.schemaLocation.value.startsWith('./')
+                  || importEl.$.schemaLocation.value.startsWith('../')
+                  ? importEl.$.schemaLocation.value
+                  : `./${importEl.$.schemaLocation.value}`;
+
+                return options.fn({ 
+                  importName: importEl.$$root.$$imports[importEl.$.namespace.value],
+                  importPath,
+                });
+              },
+              hasAttributes(children, options) {
+                if (children
+                && children.some(child => child.$ns.uri === 'http://www.w3.org/2001/XMLSchema'
+                  && ['attribute', 'anyAttribute', 'attributeGroup'].indexOf(child.$ns.local) !== -1)) {
+                  return options.fn(this);
+                }
+
+                return '';
+              },
+              typeName(typeName, el, options) {
+                const [nsAlias, local] = typeName.split(':');
+
+                const nsUri = resolveNs(nsAlias, el);
+
+                if (nsUri === 'http://www.w3.org/2001/XMLSchema') {
+                  switch (local) {
+                    case 'string':
+                    case 'base64Binary':
+                      return 'string';
+                    case 'long':
+                    case 'int':
+                    case 'decimal':
+                      return 'number';
+                    case 'boolean':
+                      return 'boolean';
+                    case 'date':
+                    case 'dateTime':
+                    case 'time':
+                      return 'Date';
+                    default:
+                      throw new Error(`Unknown built-in ${local}`);
+                  }
+                }
+
+                // check for imported stuff
+                // this must go before targetNs as this might overrule it
+                if (el.$$root.$$imports[nsUri]) {
+                  return `${el.$$root.$$imports[nsUri]}.${local}`;
+                }
+
+
+                // check for targetNameSpace
+                if (el.$$root.$.targetNamespace.value === nsUri) {
+                  return local;
+                }
+
+                throw new Error(`Can't build typename for ${typeName} ${nsUri} in ${file}`);
+              },
+            };
+
+            const result = templateFn(rn, { helpers });
+            await fs.writeFile(`${file}.js`, prettier.format(result, { ...(await prettier.resolveConfig(`${file}.js`)), parser: 'babel' }), { charset: 'utf8' });
+          } catch (e) {
+            console.error(e);
+            process.exit(-1);
+          }
         },
       );
     }
