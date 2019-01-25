@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "npm-run-all -p dev:*",
     "dev:templates": "nodemon --watch src/templates/flow -e hbs --exec yarn build:templates",
-    "dev:run": "nodemon --watch src -e js,hbs src/dev.js generate 'test/wsdl/**/*.wsdl'",
+    "dev:run": "nodemon --watch src -e js,hbs src/dev.js generate 'centris/**/*.wsdl'",
     "build": "npm-run-all build:clean build:templates build:lib",
     "build:clean": "rimraf lib",
     "build:templates": "handlebars src/templates/flow -c handlebars/runtime -e hbs -f src/templates/flow.js",
