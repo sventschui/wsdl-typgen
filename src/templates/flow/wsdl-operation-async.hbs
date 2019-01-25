@@ -1,0 +1,1 @@
+{{operation.$.name.value}}Async: ({{#if input}}input: {{localPart input.$.message.value}} | {| _xml: string |}{{/if}}) => Promise<[{{#if output}}{{localPart output.$.message.value}}{{else}}null{{/if}}, string, Object, string]>,

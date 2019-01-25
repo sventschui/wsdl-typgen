@@ -1,0 +1,13 @@
+{{#hasAttributes $children}}
+    attributes: {|
+    {{#eachOfType $children 'http://www.w3.org/2001/XMLSchema' 'attribute'}}
+        {{>schemaAttribute}}
+    {{/eachOfType}}
+    {{#eachOfType $children 'http://www.w3.org/2001/XMLSchema' 'attributeGroup'}}
+        TODO: attributeGroup
+    {{/eachOfType}}
+    {{#eachOfType $children 'http://www.w3.org/2001/XMLSchema' 'anyAttribute'}}
+        TODO: anyAttribute
+    {{/eachOfType}}
+    |},
+{{/hasAttributes}}

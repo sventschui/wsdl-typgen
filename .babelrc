@@ -1,0 +1,7 @@
+{
+    "presets": [["@babel/env", {
+        "targets": {
+            "node": "8.0"
+        }
+    }], "@babel/flow"]
+}
