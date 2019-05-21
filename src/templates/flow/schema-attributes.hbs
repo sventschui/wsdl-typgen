@@ -1,5 +1,5 @@
 {{#hasAttributes this}}
-    attributes: {|
+    attributes{{#hasNoRequiredAttributes this}}?{{/hasNoRequiredAttributes}}: {|
     {{#eachOfType $children 'http://www.w3.org/2001/XMLSchema' 'attribute'}}
         {{>schemaAttribute}}
     {{/eachOfType}}

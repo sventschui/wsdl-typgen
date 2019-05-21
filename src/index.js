@@ -196,7 +196,7 @@ commander
                 }, '')
               },
               ifAttributeOptional(attribute, options) {
-                if (attribute && attribute.$ && attribute.$.use && attribute.$.use.value === 'optional') {
+                if (attribute && (!attribute.$ || !attribute.$.use || attribute.$.use.value !== 'required')) {
                   return options.fn(this);
                 }
 
@@ -381,7 +381,24 @@ commander
 
                 return '';
               },
-              typeName(typeName, el, options) {
+              hasNoRequiredAttributes(el, options) {
+                function hasRequiredAttributes(element) {
+                  return element.$children && element.$children.some(
+                    child => child.$ns.uri === 'http://www.w3.org/2001/XMLSchema'
+                      && (
+                        (child.$ns.local === 'attribute' && child.$.use && child.$.use.value === 'required')
+                      || (['anyAttribute', 'attributeGroup'].indexOf(child.$ns.local) !== -1 && hasRequiredAttributes(child))
+                      ),
+                  );
+                }
+
+                if (hasRequiredAttributes(el)) {
+                  return '';
+                }
+
+                return options.fn(this);
+              },
+              typeName(typeName, el) {
                 const [nsAlias, local] = typeName.split(':');
 
                 const nsUri = resolveNs(nsAlias, el);
