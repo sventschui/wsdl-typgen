@@ -1,2 +1,6 @@
 {{! TODO: print annotations as comments in the right location }}
+{{#if $.ref.value}}
+{{localPartNoValidation $.ref.value}}: {{typeName $.ref.value this}}_element,
+{{else}}
 {{$.name.value}}{{#ifOptional $ '1'}}?{{/ifOptional}}: {{>schemaElementContent}},
+{{/if}}

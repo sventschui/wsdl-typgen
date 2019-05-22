@@ -309,6 +309,13 @@ commander
 
                 return '';
               },
+              hasNoChild(children, options) {
+                if (!children || children.length === 0) {
+                  return options.fn(this);
+                }
+
+                return options.inverse(this);
+              },
               eachOfType(children, nsUri, local, options) {
                 if (!children) {
                   return '';
@@ -407,10 +414,13 @@ commander
                   switch (local) {
                     case 'string':
                     case 'base64Binary':
+                    case 'token':
+                    case 'gYear':
                       return 'string';
                     case 'long':
                     case 'int':
                     case 'decimal':
+                    case 'integer':
                       return 'number';
                     case 'boolean':
                       return 'boolean';
@@ -419,7 +429,7 @@ commander
                     case 'time':
                       return 'Date';
                     default:
-                      throw new Error(`Unknown built-in ${local}`);
+                      throw new Error(`Unknown built-in ${local} ${nsAlias}`);
                   }
                 }
 
@@ -440,8 +450,11 @@ commander
             };
 
             const result = templateFn(rn, { helpers });
+            console.log(result);
+
             await fs.writeFile(`${file}.js`, prettier.format(result, { ...(await prettier.resolveConfig(`${file}.js`)), parser: 'babel' }), { charset: 'utf8' });
           } catch (e) {
+            console.log(`${file}.js`);
             console.error(e);
             process.exit(-1);
           }
