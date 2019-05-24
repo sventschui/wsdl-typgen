@@ -30,6 +30,10 @@ export type Client = {|
     {{! TODO: the other properties of a client... }}
     describe: () => Object,
     setSecurity: (security: Security) => void,
+    addSoapHeader: (soapHeader: any, name?: string, namespace?: any, xmlns?: string) => number,
+    changeSoapHeader: (index: number, soapHeader: any, name?: string, namespace?: string, xmlns?: string) => void,
+    clearSoapHeaders: () => void,
+    getSoapHeaders: () => string[];
     lastRequest: Object,
     setEndpoint: (endpoint: string) => void,
     on: ((event: 'request', callback: (xml: string, eid: string) => void) => void)
