@@ -15,11 +15,12 @@
     "build:clean": "rimraf lib",
     "build:templates": "handlebars src/templates/flow -c handlebars/runtime -e hbs -f src/templates/flow.js",
     "build:lib": "babel src -d lib --ignore src/dev.js",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "test": "echo 'no tests'"
   },
   "dependencies": {
     "camelcase": "^5.0.0",
-    "chokidar": "^2.0.4",
+    "chokidar": "^3",
     "commander": "^2.19.0",
     "glob": "^7.1.3",
     "handlebars": "^4.0.12",
