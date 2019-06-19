@@ -450,7 +450,6 @@ commander
             };
 
             const result = templateFn(rn, { helpers });
-            console.log(result);
 
             await fs.writeFile(`${file}.js`, prettier.format(result, { ...(await prettier.resolveConfig(`${file}.js`)), parser: 'babel' }), { charset: 'utf8' });
           } catch (e) {
