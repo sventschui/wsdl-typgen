@@ -1,0 +1,4 @@
+test/wsdl
+src/templates
+lib/
+flow-typed/

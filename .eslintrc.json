@@ -1,6 +1,7 @@
 {
     "extends": ["airbnb-base", "plugin:flowtype/recommended"],
     "rules": {
-        "flowtype/require-valid-file-annotation": 1
+        "flowtype/require-valid-file-annotation": 1,
+        "max-len": ["error", 140]
     }
 }
